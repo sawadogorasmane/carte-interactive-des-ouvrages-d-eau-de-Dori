@@ -249,6 +249,25 @@
         .badge.P { background: #d62828; }
         .badge.N { background: #777; }
 
+        /* Bouton « Emprise complète » */
+        .full-extent-btn {
+            display: block;
+            width: 30px;
+            height: 30px;
+            line-height: 30px;
+            text-align: center;
+            font-size: 14px;
+            color: #333;
+            background: #fff;
+            cursor: pointer;
+            text-decoration: none;
+        }
+
+        .full-extent-btn:hover {
+            background: #f4f4f4;
+            color: #000;
+        }
+
         /* =========================
            Adaptation écran mobile
            ========================= */
@@ -390,10 +409,32 @@
     }
 
     var bounds_group = new L.featureGroup([]);
+    var fullBounds = null;   // emprise complète, mémorisée au chargement
+
+    // Bouton « Emprise complète » : recadre la carte sur l'ensemble des données
+    var FullExtentControl = L.Control.extend({
+        options: { position: 'topleft' },
+        onAdd: function () {
+            var container = L.DomUtil.create('div', 'leaflet-bar leaflet-control');
+            var btn = L.DomUtil.create('a', 'full-extent-btn fas fa-expand', container);
+            btn.href = '#';
+            btn.title = 'Emprise complète';
+            btn.setAttribute('role', 'button');
+            btn.setAttribute('aria-label', 'Revenir à l\'emprise complète');
+            L.DomEvent.disableClickPropagation(container);
+            L.DomEvent.on(btn, 'click', function (e) {
+                L.DomEvent.preventDefault(e);
+                if (fullBounds) { map.fitBounds(fullBounds); }
+            });
+            return container;
+        }
+    });
+    new FullExtentControl().addTo(map);
 
     function setBounds() {
         if (bounds_group.getLayers().length) {
-            map.fitBounds(bounds_group.getBounds());
+            fullBounds = bounds_group.getBounds();
+            map.fitBounds(fullBounds);
         }
         // Limite le déplacement autour de la zone d'étude sans bloquer la navigation
         map.setMaxBounds(map.getBounds().pad(0.6));
